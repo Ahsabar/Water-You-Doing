@@ -56,6 +56,6 @@ void loop() {
 
     if (currentTime - lastTime > 5000) {
         lastTime = currentTime;
-        sendData("Merhaba Sunucu!");
+        sendData("{\"action\":\"greet\", \"message\":\"Merhaba Sunucu!\"}");
   }
 }

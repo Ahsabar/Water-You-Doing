@@ -16,8 +16,17 @@ const initializeWebSocketServer = (server) => {
 
                 // Handle WebSocket operations
                 if (wsOperations[data.action]) {
-                    const result = await wsOperations[data.action](data, ws, wss, controllerSocket);
-                    ws.send(JSON.stringify(result));
+					if (data.action === 'greet') {
+						console.log("Greet received from controller:", data.message);
+                    	ws.send(JSON.stringify({
+                    	    status: 'success',
+                    	    reply: `Hello controller! You said: ${data.message}`
+                    	}));
+					}
+					else {
+						const result = await wsOperations[data.action](data, ws, wss, controllerSocket);
+                    	ws.send(JSON.stringify(result));
+					}                    
                 } else {
                     ws.send(JSON.stringify({ status: 'error', message: 'Unknown action' }));
                 }
