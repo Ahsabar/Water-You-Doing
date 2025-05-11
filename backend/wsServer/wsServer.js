@@ -1,7 +1,7 @@
 const WebSocket = require('ws');
 const wsOperations = require('../wsOperations/wsOperations');
 
-let wss; // Store globally for access
+let wss; // Store globally
 
 const initializeWebSocketServer = (server) => {
     wss = new WebSocket.Server({ server });
@@ -14,8 +14,9 @@ const initializeWebSocketServer = (server) => {
             try {
                 const data = JSON.parse(message);
 
+                // Handle WebSocket operations
                 if (wsOperations[data.action]) {
-                    const result = await wsOperations[data.action](data, ws, wss); // pass wss to ops
+                    const result = await wsOperations[data.action](data, ws, wss, controllerSocket);
                     ws.send(JSON.stringify(result));
                 } else {
                     ws.send(JSON.stringify({ status: 'error', message: 'Unknown action' }));
