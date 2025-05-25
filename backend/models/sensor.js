@@ -15,9 +15,15 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.FLOAT,
       allowNull: true
     },
+    status: {
+      type: DataTypes.ENUM('on','off'),
+      allowNull: true,
+      defaultValue: "off"
+    },
     timestamp: {
       type: DataTypes.DATE,
-      allowNull: true
+      allowNull: true,
+      defaultValue: Sequelize.Sequelize.literal('CURRENT_TIMESTAMP')
     }
   }, {
     sequelize,

@@ -15,15 +15,21 @@ module.exports = async (sensor, sensorData, wss, controllerSocket) => {
     let action = null;
     let stopAt = null;
 
-    if (sensorData.value > threshold + tolerance) {
+    const currentStatus = sensor.status || 'off';
+
+    // Determine what to activate
+    if (sensorData.value > threshold + tolerance && currentStatus !== 'on') {
         action = 'cooler';
         stopAt = threshold - halfTolerance;
-    } else if (sensorData.value < threshold - tolerance) {
+    } else if (sensorData.value < threshold - tolerance && currentStatus !== 'on') {
         action = 'heater';
         stopAt = threshold + halfTolerance;
     }
 
-    if (!action) return;
+    if (!action) return; // Already active or within range
+
+    // Update sensor status to "on"
+    await sensor.update({ status: 'on' });
 
     const message = `${action.charAt(0).toUpperCase() + action.slice(1)} is started`;
 

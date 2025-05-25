@@ -7,9 +7,13 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       primaryKey: true
     },
-    plant_name: {
-      type: DataTypes.STRING(100),
-      allowNull: true
+    sensor_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'sensor',
+        key: 'id'
+      }
     },
     height: {
       type: DataTypes.FLOAT,
@@ -17,7 +21,8 @@ module.exports = function(sequelize, DataTypes) {
     },
     timestamp: {
       type: DataTypes.DATE,
-      allowNull: true
+      allowNull: true,
+      defaultValue: Sequelize.Sequelize.literal('CURRENT_TIMESTAMP')
     }
   }, {
     sequelize,
@@ -30,6 +35,13 @@ module.exports = function(sequelize, DataTypes) {
         using: "BTREE",
         fields: [
           { name: "id" },
+        ]
+      },
+      {
+        name: "sensor_id",
+        using: "BTREE",
+        fields: [
+          { name: "sensor_id" },
         ]
       },
     ]

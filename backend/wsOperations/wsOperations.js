@@ -1,6 +1,7 @@
 const db = require('../data/db');
 const handleTemperatureSensor = require('../handlers/handleTemperatureSensor');
 const handleHumiditySensor = require('../handlers/handleHumiditySensor');
+const handleHeightSensor = require('../handlers/handleHeightSensor');
 
 const updateSensor = async (data, ws, wss, controllerSocket) => {
     try {
@@ -23,6 +24,9 @@ const updateSensor = async (data, ws, wss, controllerSocket) => {
                 break;
             case 'humidity':
                 await handleHumiditySensor(sensor, sensorData, wss, controllerSocket);
+                break;
+			case 'height':
+                await handleHeightSensor(sensor, sensorData, wss, controllerSocket);
                 break;
             default:
                 console.warn(`No handler for sensor type: ${sensor.type}`);

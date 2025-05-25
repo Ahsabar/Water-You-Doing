@@ -16,6 +16,8 @@ function initModels(sequelize) {
   var sensor = _sensor(sequelize, DataTypes);
   var sensormeasurement = _sensormeasurement(sequelize, DataTypes);
 
+  plantheight.belongsTo(sensor, { foreignKey: "sensor_id"});
+  sensor.hasMany(plantheight, { foreignKey: "sensor_id"});
   sensormeasurement.belongsTo(sensor, { foreignKey: "sensor_id"});
   sensor.hasMany(sensormeasurement, { foreignKey: "sensor_id"});
 
