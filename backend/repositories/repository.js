@@ -69,6 +69,15 @@ const updateAdjustment = async (id, adjustmentData) => {
     return await db.adjustment.findByPk(id);
 };
 
+// DEVICE REPOSITORY
+const getDevices = async () => {
+    return await db.device.findAll();
+};
+
+const getDevice = async (id) => {
+    return await db.device.findByPk(id);
+};
+
 module.exports = {
     getSensors,
     getOneSensor,

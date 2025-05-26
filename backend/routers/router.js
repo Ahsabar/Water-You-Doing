@@ -27,4 +27,8 @@ router.get("/adjustments", controller.getAdjustments);
 router.put("/adjustments/:id", controller.updateAdjustment);
 router.post("/adjustment", controller.addAdjustment);
 
+// Device
+router.get("/devices", controller.getDevices);
+router.get("/devices/:id", controller.getDevice);
+
 module.exports = router;

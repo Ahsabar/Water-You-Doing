@@ -80,6 +80,17 @@ const addAdjustment = async (req, res) => {
     return res.status(200).json(adjustment);
 };
 
+// DEVICE CONTROLLERS
+const getDevices = async (req, res) => {
+    const devices = await repository.getDevices();
+    return res.status(200).json(devices);
+};
+
+const getDevice = async (req, res) => {
+    const device = await repository.getDevice(req.params.id);
+    return res.status(200).json(device);
+};
+
 module.exports = {
     getSensors,
     getOneSensor,
