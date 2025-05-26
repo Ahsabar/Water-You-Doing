@@ -31,4 +31,8 @@ router.post("/adjustment", controller.addAdjustment);
 router.get("/devices", controller.getDevices);
 router.get("/devices/:id", controller.getDevice);
 
+// Notification
+router.get("/notifications", controller.getNotifications);
+router.get("/notifications/:id", controller.getNotification);
+
 module.exports = router;

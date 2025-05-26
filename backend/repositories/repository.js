@@ -78,6 +78,15 @@ const getDevice = async (id) => {
     return await db.device.findByPk(id);
 };
 
+// NOTIFICATION REPOSITORY
+const getNotifications = async () => {
+    return await db.notification.findAll();
+};
+
+const getNotification = async (id) => {
+    return await db.notification.findByPk(id);
+};
+
 module.exports = {
     getSensors,
     getOneSensor,
@@ -95,5 +104,7 @@ module.exports = {
     addAdjustment,
     updateAdjustment,
     getDevices,
-    getDevice
+    getDevice,
+    getNotifications,
+    getNotification
 };
