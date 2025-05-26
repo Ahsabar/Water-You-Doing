@@ -20,15 +20,15 @@ const updateSensor = async (id, sensorData) => {
 
 // FRAME REPOSITORY
 const getFrames = async () => {
-    return await db.CameraFrame.findAll();
+    return await db.cameraframe.findAll();
 };
 
 const getOneFrame = async (id) => {
-    return await db.CameraFrame.findByPk(id);
+    return await db.cameraframe.findByPk(id);
 };
 
 const addFrame = async (frameData) => {
-    return await db.CameraFrame.create(frameData);
+    return await db.cameraframe.create(frameData);
 };
 
 // CAMERA REPOSITORY
@@ -39,34 +39,34 @@ const getCamera = async () => {
 
 // HEIGHT REPOSITORY
 const getHeights = async () => {
-    return await db.PlantHeight.findAll();
+    return await db.plantheight.findAll();
 };
 
 const getOneHeight = async (id) => {
-    return await db.PlantHeight.findByPk(id);
+    return await db.plantheight.findByPk(id);
 };
 
 const addHeight = async (heightData) => {
-    return await db.PlantHeight.create(heightData);
+    return await db.plantheight.create(heightData);
 };
 
 const updateHeight = async (id, heightData) => {
-    await db.PlantHeight.update(heightData, { where: { id } });
-    return await db.PlantHeight.findByPk(id);
+    await db.plantheight.update(heightData, { where: { id } });
+    return await db.plantheight.findByPk(id);
 };
 
 // ADJUSTMENT REPOSITORY
 const getAdjustments = async () => {
-    return await db.Adjustment.findAll();
+    return await db.adjustment.findAll();
 };
 
 const addAdjustment = async (adjustmentData) => {
-    return await db.Adjustment.create(adjustmentData);
+    return await db.adjustment.create(adjustmentData);
 };
 
 const updateAdjustment = async (id, adjustmentData) => {
-    await db.Adjustment.update(adjustmentData, { where: { id } });
-    return await db.Adjustment.findByPk(id);
+    await db.adjustment.update(adjustmentData, { where: { id } });
+    return await db.adjustment.findByPk(id);
 };
 
 module.exports = {
