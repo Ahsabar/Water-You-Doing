@@ -14,6 +14,8 @@ module.exports = async (sensor, sensorData, wss, controllerSocket) => {
     const halfTolerance = 0.5;
     const value = sensorData.value;
 
+	console.log(value);
+
     let action = null;
     let stopAction = null;
 
