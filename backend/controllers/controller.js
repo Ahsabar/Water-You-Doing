@@ -91,6 +91,17 @@ const getDevice = async (req, res) => {
     return res.status(200).json(device);
 };
 
+// NOTIFICATION CONTROLLERS
+const getNotifications = async (req, res) => {
+    const notifications = await repository.getNotifications();
+    return res.status(200).json(notifications);
+};
+
+const getNotification = async (req, res) => {
+    const notification = await repository.getNotification(req.params.id);
+    return res.status(200).json(notification);
+};
+
 module.exports = {
     getSensors,
     getOneSensor,
@@ -108,5 +119,7 @@ module.exports = {
 	updateAdjustment,
 	addAdjustment,
     getDevices,
-    getDevice
+    getDevice,
+    getNotifications,
+    getNotification
 };
