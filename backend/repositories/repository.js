@@ -94,4 +94,6 @@ module.exports = {
     getAdjustments,
     addAdjustment,
     updateAdjustment,
+    getDevices,
+    getDevice
 };

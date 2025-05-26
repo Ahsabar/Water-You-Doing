@@ -106,5 +106,7 @@ module.exports = {
     updateHeight,
 	getAdjustments,
 	updateAdjustment,
-	addAdjustment
+	addAdjustment,
+    getDevices,
+    getDevice
 };
