@@ -11,51 +11,85 @@ module.exports = async (sensor, sensorData, wss, controllerSocket) => {
 
     const threshold = adjustment.value;
     const tolerance = 5;
-    const halfTolerance = 2;
+    const halfTolerance = 2.5;
+    const value = sensorData.value;
+
+    console.log(value);
+
     let action = null;
-    let stopAt = null;
+    let stopAction = null;
 
-    if (sensorData.value < threshold - tolerance) {
+    // Decide whether to start pump
+    if (value < threshold - tolerance) {
         action = 'pump';
-        stopAt = threshold + halfTolerance;
     }
 
-    if (!action) return;
+    // Determine whether to stop pump (based on device currently running)
+    const devices = await db.device.findAll({ where: { sensorId: sensor.id } });
 
-    // Check device status before triggering
-    const device = await db.device.findOne({ where: { name: action, sensorId: sensor.id } });
-
-    if (!device) {
-        console.warn(`Device not found for action: ${action}`);
-        return;
-    }
-
-    if (device.status === 'on') {
-        console.log(`${action} already running. No command sent.`);
-        return;
-    }
-
-    // Update device status to 'on'
-    await device.update({ status: 'on' });
-
-    const message = 'Water pump is started';
-
-    // Broadcast info message to all clients
-    wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ status: 'info', message }));
+    for (const device of devices) {
+        if (device.status === 'on') {
+            if (device.name === 'pump' && value >= threshold + halfTolerance) {
+                stopAction = 'pump';
+            }
         }
-    });
+    }
 
-    await db.notification.create({ message });
-    await db.log.create({ log_message: message, log_level: 'info' });
+    // Handle stop first
+    if (stopAction) {
+        const device = devices.find(d => d.name === stopAction);
+        await device.update({ status: 'off' });
 
-    // Send command only to controller socket
-    if (controllerSocket && controllerSocket.readyState === WebSocket.OPEN) {
-        controllerSocket.send(JSON.stringify({
-            command: `start_${action}`,
-            sensorId: sensor.id,
-            stopAt
-        }));
+        const message = `Water pump is stopped`;
+
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({ status: 'info', message }));
+            }
+        });
+
+        await db.notification.create({ message });
+        await db.log.create({ log_message: message, log_level: 'info' });
+
+        if (controllerSocket && controllerSocket.readyState === WebSocket.OPEN) {
+            controllerSocket.send(JSON.stringify({
+                command: `stop_${stopAction}`,
+                sensorId: sensor.id
+            }));
+        }
+    }
+
+    // Then handle start
+    if (action && (!stopAction || stopAction !== action)) {
+        const device = devices.find(d => d.name === action);
+        if (!device) {
+            console.warn(`Device not found for action: ${action}`);
+            return;
+        }
+
+        if (device.status === 'on') {
+            console.log(`${action} already running. No command sent.`);
+            return;
+        }
+
+        await device.update({ status: 'on' });
+
+        const message = `Water pump is started`;
+
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({ status: 'info', message }));
+            }
+        });
+
+        await db.notification.create({ message });
+        await db.log.create({ log_message: message, log_level: 'info' });
+
+        if (controllerSocket && controllerSocket.readyState === WebSocket.OPEN) {
+            controllerSocket.send(JSON.stringify({
+                command: `start_${action}`,
+                sensorId: sensor.id
+            }));
+        }
     }
 };
