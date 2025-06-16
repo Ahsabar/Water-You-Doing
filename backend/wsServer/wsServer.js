@@ -1,9 +1,8 @@
 const WebSocket = require('ws');
 const wsOperations = require('../wsOperations/wsOperations');
 const socketManager = require('../utils/socketManager');
-const storedFcmToken = require('../utils/storedFcmToken');
 const admin = require('../config/firebase');
-const { setFcmToken } = require('../utils/fcmTokenManager');
+const storedFcmToken = require('../utils/fcmTokenManager');
 
 let wss; // WebSocket server instance
 // let controllerSocket = null; // Store the controller socket
@@ -33,7 +32,7 @@ const initializeWebSocketServer = (server) => {
                     } else if (data.message === 'mobile' && data.fcmToken) { // Check for FCM token in greet
                         ws.clientType = 'mobile';
                         ws.fcmToken = data.fcmToken; // Store the FCM token
-                        storedFcmToken = data.fcmToken;
+                        // storedFcmToken = data.fcmToken;
                         storedFcmToken.setFcmToken(data.fcmToken);
                         console.log('Mobile client connected with FCM Token:', ws.fcmToken);
                     } else {
