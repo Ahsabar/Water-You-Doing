@@ -8,6 +8,7 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' })); 
 app.use(express.static("node_modules"));
+app.use('/pictures', express.static("pictures"));
 
 const router = require("./routers/router");
 app.use(router);

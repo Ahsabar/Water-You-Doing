@@ -1,5 +1,6 @@
 const express = require('express');
 const controller = require('../controllers/controller');
+const upload = require('../middleware/imageUploader');
 const router = express.Router();
 
 // Get, add, update sensors
@@ -8,12 +9,12 @@ router.get("/sensors/:id", controller.getOneSensor);
 router.post("/sensor", controller.addSensor);
 //router.put("/sensor/:id", controller.updateSensor);
 
-// get, add frames
+// Get, add frames
 router.get("/frames", controller.getFrames);
 router.get("/frames/:id", controller.getOneFrame);
 router.post("/frame", controller.addFrame);
 
-// get camera
+// Get camera
 router.get("/camera", controller.getCamera);
 
 // Get, add, update heights
@@ -30,9 +31,17 @@ router.post("/adjustment", controller.addAdjustment);
 // Device
 router.get("/devices", controller.getDevices);
 router.get("/devices/:id", controller.getDevice);
+router.put("/device/:id/automation", controller.updateDeviceAutomation);
+router.post("/device/:id/on", controller.turnOnDevice);
+router.post("/device/:id/off", controller.turnOffDevice);
 
 // Notification
 router.get("/notifications", controller.getNotifications);
 router.get("/notifications/:id", controller.getNotification);
+router.put("/notifications/mark-all-read", controller.markAllNotificationsAsRead);
+
+// Pictures
+router.get("/pictures", controller.getPictures);
+router.post("/picture", upload.single('picture'), controller.addPicture);
 
 module.exports = router;

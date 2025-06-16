@@ -7,6 +7,7 @@ var _notification = require("./notification");
 var _plantheight = require("./plantheight");
 var _sensor = require("./sensor");
 var _sensormeasurement = require("./sensormeasurement");
+var _picture = require("./picture");
 
 function initModels(sequelize) {
   var adjustment = _adjustment(sequelize, DataTypes);
@@ -17,6 +18,7 @@ function initModels(sequelize) {
   var plantheight = _plantheight(sequelize, DataTypes);
   var sensor = _sensor(sequelize, DataTypes);
   var sensormeasurement = _sensormeasurement(sequelize, DataTypes);
+  var picture = _picture(sequelize, DataTypes);
 
   device.belongsTo(sensor, { foreignKey: "sensorId"});
   sensor.hasMany(device, { foreignKey: "sensorId"});
@@ -34,6 +36,7 @@ function initModels(sequelize) {
     plantheight,
     sensor,
     sensormeasurement,
+    picture,
   };
 }
 module.exports = initModels;

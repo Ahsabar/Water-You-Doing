@@ -7,6 +7,19 @@ module.exports = async (sensor, sensorData, wss, controllerSocket) => {
         order: [['timestamp', 'DESC']]
     });
 
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({ status: 'updateTemperature', value: sensorData.value }));
+        }
+    });
+
+    const device = await db.device.findOne({ where: { sensorId: sensor.id } });
+
+    if (!device || device.isAutomated == 0) {
+        console.log(`Climate Control is not automated. Skipping sensor handling.`);
+        return;
+    }
+
     if (!adjustment) return;
 
     const threshold = adjustment.value;

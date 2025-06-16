@@ -1,8 +1,10 @@
 const WebSocket = require('ws');
 const wsOperations = require('../wsOperations/wsOperations');
+const socketManager = require('../utils/socketManager');
+const admin = require('../config/firebase');
 
 let wss; // WebSocket server instance
-let controllerSocket = null; // Store the controller socket
+// let controllerSocket = null; // Store the controller socket
 
 const initializeWebSocketServer = (server) => {
     wss = new WebSocket.Server({ server });
@@ -10,6 +12,7 @@ const initializeWebSocketServer = (server) => {
     wss.on('connection', (ws) => {
         console.log('New WebSocket connection established');
         ws.clientType = 'unknown'; // Default client type
+        ws.fcmToken = null;
 
         ws.on('message', async (message) => {
             console.log('Received message:', message);
@@ -20,14 +23,21 @@ const initializeWebSocketServer = (server) => {
                     console.log("Greet received:", data.message);
 
                     if (data.message === 'controller') {
-                        controllerSocket = ws;
+                        // controllerSocket = ws;
+                        console.log('Controller socket stored');
+                        socketManager.setControllerSocket(ws);
                         ws.clientType = 'controller';
                         console.log('Controller socket stored');
-                    } else {
+                    } else if (data.message === 'mobile' && data.fcmToken) { // Check for FCM token in greet
                         ws.clientType = 'mobile';
+                        ws.fcmToken = data.fcmToken; // Store the FCM token
+                        console.log('Mobile client connected with FCM Token:', ws.fcmToken);
+                    } else {
+                        ws.clientType = 'mobile'; // Fallback for mobile without FCM token (though you should ideally get it)
                         console.log('Mobile client connected');
                     }
 
+                    console.log(data);
                     ws.send(JSON.stringify({
                         status: 'success',
                         reply: `Hello ${ws.clientType}! You said: ${data.message}`
@@ -36,7 +46,7 @@ const initializeWebSocketServer = (server) => {
                 }
 
                 if (wsOperations[data.action]) {
-                    const result = await wsOperations[data.action](data, ws, wss, controllerSocket);
+                    const result = await wsOperations[data.action](data, ws, wss, socketManager.getControllerSocket());
                     ws.send(JSON.stringify(result));
                 } else {
                     ws.send(JSON.stringify({ status: 'error', message: 'Unknown action' }));
@@ -49,13 +59,14 @@ const initializeWebSocketServer = (server) => {
         });
 
         ws.send('WebSocket connection established');
-
+        
         ws.on('close', () => {
             if (ws === controllerSocket) {
                 console.log('Controller disconnected');
                 controllerSocket = null;
             }
         });
+        
     });
 
     return wss;

@@ -1,4 +1,5 @@
 const db = require('../data/db'); // centralized models export
+const { get } = require('../routers/router');
 
 // SENSOR REPOSITORY
 const getSensors = async () => {
@@ -78,6 +79,33 @@ const getDevice = async (id) => {
     return await db.device.findByPk(id);
 };
 
+const turnOnDevice = async (id) => {
+    const device = await db.device.findByPk(id);
+    if (device) {
+        await device.update({ status: 'on' });
+        return device;
+    }
+    throw new Error('Device not found');
+}
+
+const turnOffDevice = async (id) => {
+    const device = await db.device.findByPk(id);
+    if (device) {
+        await device.update({ status: 'off' });
+        return device;
+    }
+    throw new Error('Device not found');
+}
+
+const updateDeviceAutomation = async (id, { isAutomated }) => {
+    const device = await db.device.findByPk(id);
+    if (device) {
+        await device.update({ isAutomated });
+        return device;
+    }
+    throw new Error('Device not found');
+};
+
 // NOTIFICATION REPOSITORY
 const getNotifications = async () => {
     return await db.notification.findAll();
@@ -85,6 +113,20 @@ const getNotifications = async () => {
 
 const getNotification = async (id) => {
     return await db.notification.findByPk(id);
+};
+
+const markAllNotificationsAsRead = async () => {
+    await db.notification.update({ status: "read" }, { where: { status: "unread" } });
+    return await db.notification.findAll();
+};
+
+// PICTURE REPOSITORY
+const getPictures = async () => {
+    return await db.picture.findAll();
+};
+
+const addPicture = async (pictureData) => {
+    return await db.picture.create(pictureData);
 };
 
 module.exports = {
@@ -106,5 +148,11 @@ module.exports = {
     getDevices,
     getDevice,
     getNotifications,
-    getNotification
+    getNotification,
+    markAllNotificationsAsRead,
+    turnOnDevice,
+    turnOffDevice,
+    updateDeviceAutomation,
+    getPictures,
+    addPicture
 };

@@ -23,7 +23,12 @@ module.exports = function(sequelize, DataTypes) {
         model: 'sensor',
         key: 'id'
       }
-    }
+    },
+    isAutomated: {
+      type: DataTypes.TINYINT,
+      allowNull: true,
+      defaultValue: 0
+    },
   }, {
     sequelize,
     tableName: 'device',

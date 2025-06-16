@@ -1,4 +1,7 @@
 const repository = require('../repositories/repository');
+const socketManager = require('../utils/socketManager');
+const path = require('path');
+const fs = require('fs');
 
 // SENSOR CONTROLLERS
 const getSensors = async (req, res) => {
@@ -91,6 +94,44 @@ const getDevice = async (req, res) => {
     return res.status(200).json(device);
 };
 
+const turnOnDevice = async (req, res) => {
+    const current_device = await repository.getDevice(req.params.id);
+    const deviceName = current_device.name;
+    // Send command to controller first
+    const controllerSocket = socketManager.getControllerSocket();
+    if (controllerSocket && controllerSocket.readyState === WebSocket.OPEN) {
+        controllerSocket.send(JSON.stringify({
+            command: `start_${deviceName}`,
+            deviceId: req.params.id
+        }));
+    }
+    // Then update database
+    const device = await repository.turnOnDevice(req.params.id);
+    return res.status(200).json(device);
+};
+
+const turnOffDevice = async (req, res) => {
+    const deviceName = await repository.getDevice(req.params.id).then(device => device.name);
+    // Send command to controller first
+    const controllerSocket = socketManager.getControllerSocket();
+    if (controllerSocket && controllerSocket.readyState === WebSocket.OPEN) {
+        controllerSocket.send(JSON.stringify({
+            command: `stop_${deviceName}`,
+            deviceId: req.params.id
+        }));
+    }
+    
+    // Then update database
+    const device = await repository.turnOffDevice(req.params.id);
+    return res.status(200).json(device);
+};
+
+const updateDeviceAutomation = async (req, res) => {
+    const { isAutomated } = req.body;
+    const updatedDevice = await repository.updateDeviceAutomation(req.params.id, { isAutomated });
+    return res.status(200).json(updatedDevice);
+};
+
 // NOTIFICATION CONTROLLERS
 const getNotifications = async (req, res) => {
     const notifications = await repository.getNotifications();
@@ -100,6 +141,37 @@ const getNotifications = async (req, res) => {
 const getNotification = async (req, res) => {
     const notification = await repository.getNotification(req.params.id);
     return res.status(200).json(notification);
+};
+
+const markAllNotificationsAsRead = async (req, res) => {
+    const updatedNotifications = await repository.markAllNotificationsAsRead();
+    return res.status(200).json(updatedNotifications);
+}
+
+// PICTURE CONTROLLERS
+const getPictures = async (req, res) => {
+    const pictures = await repository.getPictures();
+    return res.status(200).json(pictures);
+};
+
+const addPicture = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        const pictureData = {
+          file_name: req.file.filename, // Use the stored filename
+          file_path: req.file.path
+        };
+
+        const picture = await repository.addPicture(pictureData);
+
+        return res.status(201).json(picture);
+    } catch (err) {
+        console.log('Error adding picture:', err);
+        return res.status(500).json({ error: err.message });
+    }
 };
 
 module.exports = {
@@ -121,5 +193,11 @@ module.exports = {
     getDevices,
     getDevice,
     getNotifications,
-    getNotification
+    getNotification,
+    markAllNotificationsAsRead,
+    turnOnDevice,
+    turnOffDevice,
+    updateDeviceAutomation,
+    getPictures,
+    addPicture
 };
