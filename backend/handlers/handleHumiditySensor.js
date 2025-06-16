@@ -1,10 +1,11 @@
 const WebSocket = require('ws');
 const db = require('../data/db');
 const { sendPushNotification } = require('../utils/fcmService')
-let storedFcmToken = null;
+const storedFcmToken = require('../utils/fcmTokenManager');
 
 module.exports = async (sensor, sensorData, wss, controllerSocket) => {
-    
+    const fcmToken = storedFcmToken.getFcmToken();
+
     const adjustment = await db.adjustment.findOne({
         where: { adjustment_type: sensor.type },
         order: [['timestamp', 'DESC']]
@@ -73,21 +74,17 @@ module.exports = async (sensor, sensorData, wss, controllerSocket) => {
     });
     
     if (mobileClients.length === 0) {
-        const storedTokens = await db.fcmToken.findAll({  // assume you saved them earlier
-        attributes: ['token'],
-        where: { active: true }
-        }).then(rows => rows.map(r => r.token));
+        const storedTokens = fcmToken;
 
         for (const token of storedTokens) {
         await sendPushNotification(
             token,
-            'Soil Moisture Update',
+            'Water Pump Update',
             infoMessage,
             { sensorId: sensor.id }
         );
         }
     }
-
 
     // Handle stop first
     if (stopAction) {

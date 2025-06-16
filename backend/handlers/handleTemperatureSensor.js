@@ -1,7 +1,11 @@
 const WebSocket = require('ws');
 const db = require('../data/db');
+const { sendPushNotification } = require('../utils/fcmService')
+const storedFcmToken = require('../utils/fcmTokenManager')
 
 module.exports = async (sensor, sensorData, wss, controllerSocket) => {
+    const fcmToken = storedFcmToken.getFcmToken();
+
     const adjustment = await db.adjustment.findOne({
         where: { adjustment_type: sensor.type },
         order: [['timestamp', 'DESC']]
@@ -52,6 +56,41 @@ module.exports = async (sensor, sensorData, wss, controllerSocket) => {
             }
         }
     }
+
+    let infoMessage = null;
+    if (stopAction) {
+      infoMessage = `${stopAction.charAt(0).toUpperCase() + stopAction.slice(1)} is stopped.`;
+    } else if (action && (!stopAction || stopAction !== action)) {
+      infoMessage = `${action.charAt(0).toUpperCase() + action.slice(1)} is started.`;
+    }
+
+    // if (!infoMessage) return;
+
+    const mobileClients = [];
+    wss.clients.forEach(client => {
+        if (
+        client.readyState === WebSocket.OPEN &&
+        client.clientType === 'mobile' &&
+        client.fcmToken // ensure we have a token
+        ) {
+          mobileClients.push(client);
+          client.send(JSON.stringify({ status: 'info', message: infoMessage }));
+        }
+    });
+    
+    if (mobileClients.length === 0) {
+        const storedTokens = fcmToken;
+
+        for (const token of storedTokens) {
+        await sendPushNotification(
+            token,
+            'Water Pump Update',
+            infoMessage,
+            { sensorId: sensor.id }
+        );
+        }
+    }
+
 
     // Handle stop first
     if (stopAction) {
