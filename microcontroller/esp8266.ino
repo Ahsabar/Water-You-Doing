@@ -3,14 +3,22 @@
 #include <ArduinoJson.h>
 #include <DHT.h>
 
-#define HEATER_PIN D5      // GPIO14
-#define COOLER_PIN D6      // GPIO12
-#define DHTPIN D2          // GPIO13
-#define DHTTYPE DHT11      // Sensor type
-#define SOIL_MOISTURE_PIN A0 // ADC pin for soil moisture
+#define HEATER_PIN D5           // Still heater
+#define PUMP_ENA_PIN D1         // Already assigned, keep
+#define COOLER_EN_PIN D6        // Already assigned, keep
 
-const char* ssid = "tplink";
-const char* password = "asdfva124";
+#define PUMP_IN1 D7             // Free pin (GPIO13)
+#define PUMP_IN2 D8             // Free pin (GPIO15)
+
+#define COOLER_IN3 D3           // GPIO0 – safe for output
+#define COOLER_IN4 D4   
+      // GPIO12
+#define DHTPIN D2          // GPIO4 (correct GPIO for DHT11)
+#define DHTTYPE DHT11
+#define SOIL_MOISTURE_PIN A0
+
+const char* ssid = "POCO X3 NFC";
+const char* password = "b1rk2h3n";
 
 WebSocketsClient webSocket;
 DHT dht(DHTPIN, DHTTYPE);
@@ -43,14 +51,28 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
                         digitalWrite(HEATER_PIN, HIGH);
                         Serial.println("Heater started");
                     } else if (command == "stop_heater") {
-                        digitalWrite(HEATER_PIN, LOW);
+                        digitalWrite(HEATER_PIN, LOW); 
                         Serial.println("Heater stopped");
                     } else if (command == "start_cooler") {
-                        digitalWrite(COOLER_PIN, HIGH);
+                        digitalWrite(COOLER_IN3, HIGH);
+                        digitalWrite(COOLER_IN4, LOW);
+                        digitalWrite(COOLER_EN_PIN, HIGH);
                         Serial.println("Cooler started");
                     } else if (command == "stop_cooler") {
-                        digitalWrite(COOLER_PIN, LOW);
+                        digitalWrite(COOLER_IN3, LOW);
+                        digitalWrite(COOLER_IN4, LOW);
+                        digitalWrite(COOLER_EN_PIN, LOW);
                         Serial.println("Cooler stopped");
+                    } else if (command == "start_pump") {
+                        digitalWrite(PUMP_IN1, HIGH);
+                        digitalWrite(PUMP_IN2, LOW);
+                        digitalWrite(PUMP_ENA_PIN, HIGH); // Pump ON
+                        Serial.println("Pump started");
+                    } else if (command == "stop_pump") {
+                        digitalWrite(PUMP_IN1, LOW);
+                        digitalWrite(PUMP_IN2, LOW);
+                        digitalWrite(PUMP_ENA_PIN, LOW); 
+                        Serial.println("Pump stopped");
                     }
                 }
             }
@@ -84,8 +106,8 @@ int measureSoilMoisturePercent() {
     int rawValue = analogRead(SOIL_MOISTURE_PIN);
     Serial.printf("Soil Moisture -> Raw: %d\n", rawValue);
 
-    const int wetValue = 590;   // ADC for wet soil
-    const int dryValue = 1024;   // ADC for dry soil
+    const int wetValue = 560;
+    const int dryValue = 1024;
 
     if (rawValue < wetValue) rawValue = wetValue;
     if (rawValue > dryValue) rawValue = dryValue;
@@ -101,12 +123,24 @@ void setup() {
     Serial.begin(115200);
     dht.begin();
 
-    Serial.printf("COOLER_PIN resolved to GPIO %d\n", COOLER_PIN);
-
     pinMode(HEATER_PIN, OUTPUT);
-    pinMode(COOLER_PIN, OUTPUT);
     digitalWrite(HEATER_PIN, LOW);
-    digitalWrite(COOLER_PIN, LOW);
+
+    pinMode(PUMP_IN1, OUTPUT);
+    pinMode(PUMP_IN2, OUTPUT);
+    pinMode(PUMP_ENA_PIN, OUTPUT);
+
+    digitalWrite(PUMP_IN1, LOW);
+    digitalWrite(PUMP_IN2, LOW);
+    digitalWrite(PUMP_ENA_PIN, LOW);
+
+    pinMode(COOLER_IN3, OUTPUT);
+    pinMode(COOLER_IN4, OUTPUT);
+    pinMode(COOLER_EN_PIN, OUTPUT);
+
+    digitalWrite(COOLER_IN3, LOW);
+    digitalWrite(COOLER_IN4, LOW);
+    digitalWrite(COOLER_EN_PIN, LOW);
 
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
@@ -115,7 +149,7 @@ void setup() {
     }
     Serial.println("\nWiFi connected");
 
-    webSocket.begin("192.168.0.152", 3000, "/");
+    webSocket.begin("192.168.74.73", 3000, "/");
     webSocket.onEvent(webSocketEvent);
     webSocket.setReconnectInterval(5000);
 }
@@ -127,7 +161,7 @@ void loop() {
     static unsigned long lastMoistureTime = 0;
     unsigned long currentTime = millis();
 
-    if (currentTime - lastTemperatureTime > 10000) {  // every 10 seconds
+    if (currentTime - lastTemperatureTime > 10000) {
         lastTemperatureTime = currentTime;
         float temperature = measureTemperature();
 
@@ -141,7 +175,7 @@ void loop() {
         sendData(tempMessage);
     }
 
-    if (currentTime - lastMoistureTime > 5000) {  // every 5 seconds
+    if (currentTime - lastMoistureTime > 10000) {
         lastMoistureTime = currentTime;
         int moisture = measureSoilMoisturePercent();
 
