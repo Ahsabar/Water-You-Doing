@@ -64,9 +64,9 @@ const initializeWebSocketServer = (server) => {
         ws.send('WebSocket connection established');
         
         ws.on('close', () => {
-            if (ws === controllerSocket) {
+            if (ws === socketManager.getControllerSocket()) {
                 console.log('Controller disconnected');
-                controllerSocket = null;
+                socketManager.setControllerSocket(null);
             }
         });
         

@@ -74,28 +74,41 @@ module.exports = async (sensor, sensorData, wss, controllerSocket) => {
         client.fcmToken // ensure we have a token
         ) {
           mobileClients.push(client);
-          client.send(JSON.stringify({ status: 'info', message: infoMessage }));
+        //   client.send(JSON.stringify({ status: 'info', message: infoMessage }));
         }
     });
     
-    if (mobileClients.length === 0) {
-        const storedTokens = fcmToken;
+    // if (mobileClients.length === 0) {
+    //     const storedToken = fcmToken;
 
-        for (const token of storedTokens) {
-        await sendPushNotification(
-            token,
-            'Water Pump Update',
-            infoMessage,
-            { sensorId: sensor.id }
-        );
-        }
-    }
+    //     await sendPushNotification(
+    //         storedToken,
+    //         'Climate Update',
+    //         infoMessage
+    //     );
+    // }
 
 
     // Handle stop first
     if (stopAction) {
         const device = devices.find(d => d.name === stopAction);
+        
+        if (device.status === 'off') {
+            console.log(`${stopAction} already stopped. No command sent.`);
+            return;
+        }
+
         await device.update({ status: 'off' });
+
+        if (mobileClients.length === 0) {
+            const storedToken = fcmToken;
+
+            await sendPushNotification(
+                storedToken,
+                'Climate Update',
+                infoMessage
+            );
+        }
 
         const message = `${stopAction.charAt(0).toUpperCase() + stopAction.slice(1)} is stopped`;
 
@@ -124,6 +137,16 @@ module.exports = async (sensor, sensorData, wss, controllerSocket) => {
         if (device.status === 'on') {
             console.log(`${action} already running. No command sent.`);
             return;
+        }
+        
+        if (mobileClients.length === 0) {
+            const storedToken = fcmToken;
+
+            await sendPushNotification(
+                storedToken,
+                'Climate Update',
+                infoMessage
+            );
         }
 
         await device.update({ status: 'on' });

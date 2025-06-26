@@ -128,7 +128,17 @@ const turnOffDevice = async (req, res) => {
 
 const updateDeviceAutomation = async (req, res) => {
     const { isAutomated } = req.body;
-    const updatedDevice = await repository.updateDeviceAutomation(req.params.id, { isAutomated });
+    let updatedDevice;
+    if (req.params.id === '1' || req.params.id === '2') {
+        // Update both devices 1 and 2
+        const updated1 = await repository.updateDeviceAutomation('1', { isAutomated });
+        const updated2 = await repository.updateDeviceAutomation('2', { isAutomated });
+        updatedDevice = [updated1, updated2];
+    } else if (req.params.id === '3') {
+        updatedDevice = await repository.updateDeviceAutomation('3', { isAutomated });
+    } else {
+        return res.status(400).json({ error: 'Invalid device id' });
+    }
     return res.status(200).json(updatedDevice);
 };
 
